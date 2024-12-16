@@ -1,0 +1,269 @@
+
+ul { 
+  margin: 0;
+  padding: 0;
+}
+.pm .user-picture {
+
+  position: relative;
+  margin: 0 -5px 66px 0px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: auto;
+  box-sizing: border-box;
+}
+.pm .section-2 {
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-weight: 400;
+  font-size: 36px;
+  color: #000000;
+}
+.pm .section {
+  border-radius: 20px;
+  background: white;
+  position: relative;
+  margin: 0 0 55px 2px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  padding: 7px 4.9px 7px 0;
+  width: 199px;
+  box-sizing: border-box;
+}
+.pm .plus-2 {
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-weight: 400;
+  font-size: 36px;
+  color: #000000;
+}
+.post_offer{
+  position: absolute;
+  border-radius: 20px;
+  background-color: whitesmoke;
+  width:auto;
+  height: auto;
+  z-index: 10;
+  margin-top: 150px;
+  margin-left: 200px;
+  box-shadow: 0 0 100000px rgba(0, 0, 0, 100);
+}
+.offer_content input {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.offer_content input:focus {
+  outline: none;
+  border-color: dodgerblue;
+  box-shadow: 0 0 5px dodgerblue;
+}
+.post_offer .offer_content{
+  position: relative;
+  margin: 110px 10px 10px 10px;
+}
+.post_offer .post{
+  position: absolute;
+  display: flex; 
+  flex-direction: row;
+  margin-top: 10px;
+  margin-left: 800px;
+}
+
+.pm .plus {
+  border-radius: 20px;
+  position: relative;
+  margin: 0 0 55px 2px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  padding: 7px 4.8px 7px 0;
+  width: 199px;
+  box-sizing: border-box;
+}
+.pm .some-data-statistics-1 {
+  text-align: center;
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-weight: 400;
+  font-size: 36px;
+  color: #000000;
+}
+.pm .some-data-statistics {
+  background: #D9D9D9;
+  position: relative;
+  margin-right: 2px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  padding: 46px 1px 85px 0;
+  width: 199px;
+  box-sizing: border-box;
+}
+ .image-9 {
+  border-radius: 50%;
+  border: 1px solid #000000;
+  background: url('../assets/images/men.png') 50% / cover no-repeat;
+}
+.image-2 {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #000000;
+  background: url('../assets/images/address.gif') 50% / cover no-repeat;
+}
+.image-3 {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #000000;
+  background: url('../assets/images/description.png') 50% / cover no-repeat;
+}
+.image-1 {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #000000;
+  background: url('../assets/images/salary.png') 50% / cover no-repeat;
+}
+.image-4 {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #000000;
+  background: url('../assets/images/tags.png') 50% / cover no-repeat;
+}
+.image-5 {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #000000;
+  background: url('../assets/images/title.png') 50% / cover no-repeat;
+}
+.image-6 {
+  width: 150px;
+  height: 100px;
+  
+  background: url('../assets/images/close.png') 50% / cover no-repeat;
+}
+.image-7 {
+  width: 150px;
+  height: 100px;
+  
+  background: url('../assets/images/sent.png') 50% / cover no-repeat;
+}
+.pm .container {
+    margin: 139px 150px 0 -50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 201px;
+    height: fit-content;
+    box-sizing: border-box;
+}
+.pm .careerpitrue{
+  position: absolute;
+  margin-left: -140px;
+  width: 350px;
+  height: 1200px;
+  background-color: #5B7CFD;
+  box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+}
+.pm .rectangle-32 {
+  position: relative;
+  background: white;
+  margin-bottom: 36.4px;
+  width: 1140px;
+  height: auto; 
+  border-radius: 10px 20px 30px 20px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+.rectangle-32 input {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
+.rectangle-32 li{
+  margin: 10px 10px 10px 10px;
+}
+
+.rectangle-32 input:focus {
+  outline: none;
+  border-color: dodgerblue;
+  box-shadow: 0 0 5px dodgerblue;
+}
+.rectangle-32 .career_name{
+  position: relative;
+  font-size: 40px;
+  color: #000000;
+}
+.rectangle-32 .career_salary{
+  position: relative;
+  flex-direction: row;
+  font-size: 32px;
+  color: #000000;
+}
+.rectangle-32 .career_area{
+  position: relative;
+  font-size: 32px;
+  color: #000000;
+}
+.rectangle-32 .career_description{
+  position: relative;
+  font-size: 32px;
+  color: #000000;
+}
+.rectangle-32 .career_tags{
+  position: relative;
+  font-size: 32px;
+  color: #000000;
+}
+.pm .rectangle-33 {
+  background: #D9D9D9;
+  margin-bottom: 48.1px;
+  width: 1037px;
+  height: 93.5px;
+}
+.pm .rectangle-35 {
+  background: #D9D9D9;
+  margin-bottom: 48.1px;
+  width: 1037px;
+  height: 93.5px;
+}
+.pm .rectangle-36 {
+  background: #D9D9D9;
+  margin-bottom: 48.1px;
+  width: 1037px;
+  height: 93.5px;
+}
+.pm .rectangle-37 {
+  background: #D9D9D9;
+  margin-bottom: 36.4px;
+  width: 1037px;
+  height: 93.5px;
+}
+.pm .rectangle-38 {
+  background: #D9D9D9;
+  width: 1037px;
+  height: 93.5px;
+}
+.pm .career {
+  margin: 139px 0 0px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 1037px;
+  height: fit-content;
+  box-sizing: border-box;
+}
+.pm {
+  letter-spacing: 0.1em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+  background: rgba(63, 103, 232, 0.3);
+  display: flex;
+  flex-direction: row;
+  padding: 0px 0px 0px 140px;
+  width: 1549px;
+  box-sizing: border-box;
+  border-radius: 15px;
+}

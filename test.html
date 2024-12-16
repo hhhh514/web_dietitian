@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vite App</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+  <template>
+  <div id="app">
+    <div v-for="(item, index) in RmBookList" :key="item.id" class="image-container">
+      <img :src="item.imgUrl" alt="Book Image" class="book-image" @mouseover="showText(index)" @mouseleave="hideText(index)">
+      <span v-show="showHoverText[index]" class="hover-text">{{ item.title }}</span>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      RmBookList: [
+        { id: 1, imgUrl: 'path/to/image1.jpg', title: 'Book 1' },
+        { id: 2, imgUrl: 'path/to/image2.jpg', title: 'Book 2' },
+        // Add more book objects...
+      ],
+      showHoverText: []
+    };
+  },
+  methods: {
+    showText(index) {
+      this.$set(this.showHoverText, index, true);
+    },
+    hideText(index) {
+      this.$set(this.showHoverText, index, false);
+    }
+  }
+};
+</script>
+
+<style scoped>
+/* Add your styles for image and hover text */
+.image-container {
+  position: relative;
+  display: inline-block;
+}
+
+.book-image {
+  width: 200px; /* Adjust width as needed */
+  height: auto; /* Maintain aspect ratio */
+}
+
+.hover-text {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  display: none;
+}
+
+</style>
+</html>

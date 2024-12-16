@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="importmap">
+        {
+          "imports": {
+            "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+          }
+        }
+    </script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        .noteText {
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <p v-for="(item, i) in data.newsdata" :key="item.id">
+            <img :src='item.imgUrl'>
+        </p>
+    </div>
+    <script type="module">
+        import { reactive, createApp, onMounted } from 'vue';
+        import axios from 'axios';
+
+        createApp({
+            setup() {
+                const data = reactive({
+                    newsdata: '',
+                });
+                onMounted(() => {
+                    axios.get('http://203.64.91.71/pms/v1/Book/majorList')
+                        .then((res) => {
+                            data.newsdata = res.data;
+                            console.log(res.data);
+                        });
+                });
+                return { data };
+            },
+        }).mount('#app');
+    </script>
+</body>
+</html>
+//第二
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="importmap">
+        {
+          "imports": {
+            "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+          }
+        }
+    </script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        .noteText {
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <p v-for="item in data.newsdata" :key="item">{{item}}</p>
+    </div>
+    <div v-for="field in data.fields" :key="field.name">
+        <h2>{{ field.name }}</h2>
+        <ul>
+            <li v-for="major in field.majors" :key="major.name">{{ major.name }}</li>
+        </ul>
+    </div>
+    <script type="module">
+        import { reactive, createApp, onMounted } from 'vue';
+        import axios from 'axios';
+
+        createApp({
+            setup() {
+                const data = reactive({
+                    newsdata: '',
+                    fields: [],
+                });
+                onMounted(() => {
+                    axios.get('http://203.64.91.71/pms/v1/Book/recommendBookList')
+                        .then((res) => {
+                            data.newsdata = res.data;
+                            console.log(res.data);
+                        });
+                    axios.get('http://203.64.91.71/pms/v1/Book/majorList')
+                        .then((res) => {
+                            data.fields = res.data;
+                            console.log(res.data);
+                        });
+                });
+                return { data };
+            },
+        }).mount('#app');
+    </script>
+</body>
+</html>

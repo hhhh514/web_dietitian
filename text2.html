@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="importmap">
+        {
+          "imports": {
+            "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+          }
+        }
+      </script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"
+        integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        .noteText {
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        import { reactive, createApp, onMounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+        import axios from 'axios';
+        $.ajax({
+            url: "http://203.64.91.71/pms/v1/Book/bookListMultiFilter",
+            type: "POST",
+            timeout: 15000,
+            data: JSON.stringify(['會計學']),
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            success: function (data) {
+                console.log(data);
+            }
+        });
+        axios.get('http://203.64.91.71/pms/v1/Book/majorListFilter?fieldName=會計學').then((res) => {
+            console.log(res.data);
+        })
+
+        createApp({
+            setup() {
+                const data = reactive({
+                    newsdata: '',
+                })
+                onMounted(() => {
+                    axios.get('https://picsum.photos/v2/list')
+                        .then((res) => {
+                            data.newsdata = res.data;
+                            console.log(res.data);
+                        });
+                });
+                return { data };
+            },
+        }).mount('#app')
+
+    </script>
+</body>

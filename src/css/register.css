@@ -1,0 +1,252 @@
+
+.register .top-book-picture {
+  letter-spacing: 0.1em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+  margin: 250px 0 355px 34px;
+  display: inline-block;
+  text-align: center;
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-weight: 400;
+  font-size: 64px;
+  color: #000000;
+}
+.register .short-detail {
+  margin-right: 19px;
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-weight: 400;
+  font-size: 64px;
+  color: #000000;
+}
+
+.register .topbookpicture {
+  border-radius: 20px;
+  background: url('../assets/images/register.png') 50% / cover no-repeat;
+  position: relative;
+  margin: 135px 100px 22px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 41px 0 126px 0;
+  width: 507px;
+  height: 836px;
+  box-sizing: border-box;
+}
+.register .join-us {
+  margin: 0 10px 30px 0;
+  font-size: 96px;
+  font-weight: bold;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+.input-with-icon {
+  position: relative;
+}
+
+.input-with-icon .account_p {
+  position: absolute;
+  background: url('../assets/images/account.png') 50% / cover no-repeat;
+  width: 80px;
+  height: 70px;
+  margin-top: -5px;
+  margin-left: -15px;
+  
+}
+.input-with-icon .name_p {
+  position: absolute;
+  background: url('../assets/images/name.png') 50% / cover no-repeat;
+  width: 80px;
+  height: 70px;
+  margin-top: -5px;
+  margin-left:-15px;
+  
+}
+
+.input-with-icon .password_p {
+  position: absolute;
+  background: url('../assets/images/password.png') 50% / cover no-repeat;
+  width: 80px;
+  height: 70px;
+  margin-top: -5px;
+  margin-left:-15px;
+  
+}
+.register .name {
+  letter-spacing: 0.1em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: inline-block;
+  align-self: flex-start;
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-weight: 400;
+  font-size: 36px;
+  color: #000000;
+}
+.register .rectangle-43 {
+  background: white;
+  margin-left: 60px;
+  font-size: 36px;
+  width: 454px;
+  height: 63px;
+}
+.register .account {
+  letter-spacing: 0.1em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+  align-self: flex-start;
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-weight: 400;
+  font-size: 36px;
+  color: #000000;
+}
+.register .rectangle-44 {
+  background: white;
+  margin-left: 60px;
+  font-size: 36px;
+  width: 454px;
+  height: 63px;
+}
+.input-with-icon input {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
+.input-with-icon input:focus {
+  outline: none;
+  border-color: dodgerblue;
+  box-shadow: 0 0 5px dodgerblue;
+}
+.register .password {
+  letter-spacing: 0.1em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+  margin: 0 1px;
+  align-self: flex-start;
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-weight: 400;
+  font-size: 36px;
+  color: #000000;
+}
+.register .rectangle-45 {
+  background: white;
+  margin-left: 60px;
+  font-size: 36px;
+  width: 454px;
+  height: 63px;
+}
+.register .retype-password {
+  letter-spacing: 0.1em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: inline-block;
+  align-self: flex-start;
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-weight: 400;
+  font-size: 36px;
+  color: #000000;
+}
+.register .rectangle-46 {
+  background: white;
+  margin-left: 60px;
+  font-size: 36px;
+  width: 454px;
+  height: 63px;
+}
+.register .sigh-up {
+  margin: 0 0 34px 23px; 
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  box-sizing: border-box;
+}
+.register .line-4 {
+  background: #000000;
+  margin-bottom: 14px;
+  width: 656px;
+  height: 1px;
+}
+.register .as-a {
+  margin: 0 0 27px 20.1px;
+  display: inline-block;
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-weight: 400;
+  font-size: 48px;
+  color: #000000;
+}
+.register .student {
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-weight: 400;
+  font-size: 36px;
+  color: #000000;
+}
+.register .confirm-button {
+  letter-spacing: 0.1em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+  border-radius: 20px;
+ 
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  padding: 10px 11.4px 9px 11.4px;
+  box-sizing: border-box;
+}
+.register .worker {
+  overflow-wrap: break-word;
+  font-family: 'Inter';
+  font-weight: 400;
+  font-size: 36px;
+  color: #000000;
+}
+.register .confirm-button-1 {
+  letter-spacing: 0.1em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+  border-radius: 20px;
+  
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  padding: 10px 18.2px 9px 18.2px;
+  box-sizing: border-box;
+}
+.register .container-1 {
+  margin: 0 34px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-self: flex-end;
+  width: 552px;
+  box-sizing: border-box;
+}
+.register .container {
+  margin-top: 107px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 656px;
+  height: fit-content;
+  box-sizing: border-box;
+}
+.register {
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: row;
+  padding: 99px 120px 155px 150px;
+  width: 1549px;
+  box-sizing: border-box;
+}
