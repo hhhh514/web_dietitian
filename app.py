@@ -4,13 +4,15 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from sklearn.metrics.pairwise import cosine_similarity
 import pymysql
-connection = pymysql.connect(
-    host='localhost',
-    user='salana',
-    password='aas659800123',
-    database='test',
-    charset='utf8mb4'
-)
+import json
+def get_db_connection():
+    return pymysql.connect(
+        host='localhost',
+        user='salana',
+        password='aas659800123',
+        database='test',
+        charset='utf8mb4'
+    )
 # 載入模型
 model = tf.keras.models.load_model("dish_recommendation_model.h5")
 # 建立 Flask 應用程式
@@ -22,23 +24,64 @@ CORS(app, resources={r"/recommend": {"origins": "http://localhost:5173"}}, suppo
 CORS(app, resources={r"/login": {"origins": "http://localhost:5173"}}, supports_credentials=True)
 CORS(app, resources={r"/register": {"origins": "http://localhost:5173"}}, supports_credentials=True)
 CORS(app, resources={r"/recipe": {"origins": "http://localhost:5173"}}, supports_credentials=True)
-# 菜品特徵
-def binary_string_to_numeric(binary_string):
-    return [int(bit) for bit in binary_string]
+# 菜品口味
+def to_flavor_list(sweet, spicy, salty, oily, sour, bitter, light, crispy, fragrant, smoked):
+    # 定義對應的風味標識符
+    flavor_labels = ['sweet', 'spicy', 'salty', 'oily', 'sour', 'bitter', 'light', 'crispy', 'fragrant', 'smoked']
+    # 根據風味標識符的順序，只選擇值為1的風味標籤
+    flavor_features = [flavor for flavor, value in zip(flavor_labels, [sweet, spicy, salty, oily, sour, bitter, light, crispy, fragrant, smoked]) if value == 1]
+    return flavor_features
+connection = get_db_connection()
+try:
+    dish_features = {}
+    with connection.cursor() as cursor:
+        query = """
+          SELECT dish_id, name, ingredients, food_category, recipe, 
+                 sweet, spicy, salty, oily, sour, bitter, light, crispy, fragrant, smoked,
+                 calories, protein, carbohydrates, sodium,fiber,fat,vitamins_e,vitamins_c, vitamins_b
+          FROM dishes
+          
+        """
+        
+        cursor.execute(query)
+        # 初始化集合與字典
+        remaining_data = {}        # 保留非特徵值欄位資料
+        new_dish_id = 0  # 設定新的dish_id從0開始
+        
+        for row in cursor.fetchall():
+            # 重新編號dish_id，從0開始
+            dish_id = new_dish_id  
+            new_dish_id += 1  # 更新dish_id
+            
+            # 提取特徵值（第5到最後的欄位）
+            flavor_features = tuple(row[5:15])  # 提取 sweet 到 smoked 的欄位
+            dish_features[dish_id] = list(row[15:])  # 提取 calories 到 vitamins_b 的欄位
+            # 計算16進制值
+            flavor_list = to_flavor_list(*flavor_features)
+
+            # 提取剩餘資料（非特徵值）並將16進制風味特徵存入
+            remaining_data[dish_id] = {
+                "name": row[1],
+                "ingredients": row[2],
+                "food_category": row[3],
+                "recipe": row[4],
+                "features_hex": flavor_list  # 存儲為包含1的風味標籤
+            }
+        for dish_id in list(remaining_data.keys())[:20]:
+            dish_info = remaining_data[dish_id]
+            print(f"Dish ID: {dish_id}, Name: {dish_info['name']}, Flavor List: {dish_info['features_hex']}")
+finally:
+    # 關閉連線
+    connection.close()
 
 # 更新菜品特徵
-dish_features = {
-    0: [20, 10, 50, 350, 7.5, 500, 1.2] + binary_string_to_numeric('00110011'),
-    1: [15, 20, 60, 450, 6.0, 400, 1.0] + binary_string_to_numeric('01000100'),
-    2: [10, 5, 80, 300, 8.0, 300, 1.5] + binary_string_to_numeric('10000000'),
-    3: [25, 15, 40, 400, 7.0, 600, 1.3] + binary_string_to_numeric('00010010'),
-    4: [30, 20, 30, 500, 6.5, 700, 1.4] + binary_string_to_numeric('00001000'),
-}
+
 user_order_history = {
-    0: {"早餐": [1], "午餐": [3], "晚餐": [0]},
-    1: {"早餐": [1], "午餐": [3], "晚餐": [0]},
-    2: {"早餐": [1], "午餐": [3], "晚餐": [0]},
+    0: {"早餐": [3043, 3088, 3294, 3307, 3138, 2916, 3520, 2960], "午餐":[1920, 2539, 2255, 2513, 2033, 1949,1664, 1517, 1007, 1875, 980, 1305,1, 9, 212, 188], "晚餐": [480, 295, 655, 239, 913, 179, 468, 61, 63,1315, 1514, 1870, 1679, 1086, 1053, 1694, 1469,2849, 2724, 2437, 2511, 1752, 1975, 2904, 1983]},
+    1: {"早餐": [3145, 3024, 3192, 3687, 3266, 3425, 3790, 3323], "午餐": [2824, 2285, 2323, 2135, 2679, 2329,1831, 1065, 1133, 1006, 1135, 1358, 1101,640, 5, 487, 949, 662, 732, 62], "晚餐": [1354, 1005, 1357, 1011, 1617, 1623, 1820,289, 903, 105, 271, 24, 347,1926, 1993, 1995, 2735, 2707, 2103, 2168]},
+    2: {"早餐": [3711, 3644, 3664, 3761, 3023, 3681, 3475, 3181], "午餐": [2080, 2692, 2021, 2282, 1964, 2636, 2578, 1972, 2104, 2108,1089, 1071, 977, 980, 1044, 1014, 1080, 1114,519, 892, 874, 467, 634, 698, 186, 124], "晚餐": [2403, 2217, 2061, 2841,995, 1060, 1068, 1010, 1047, 1117,577, 615, 627, 823, 795, 925]},
 }
+# 假設用戶的基本數據 (身高 cm，體重 kg，年齡，性別)
 
 # 計算 BMI
 def calculate_bmi(height, weight):
@@ -77,12 +120,17 @@ def classify_dishes_based_on_similarity(similarity_matrix, known_meals):
 
     return meal_classification
 
-# 假設已知餐次的菜品
+# 讀取 JSON 文件
+with open('menus.json', 'r', encoding='utf-8') as file:
+    menu_data = json.load(file)
+
+# 將 JSON 數據放入 known_meals
 known_meals = {
-    "早餐": [1],
-    "午餐": [3],
-    "晚餐": [0],
+    "早餐": menu_data["breakfast_menu"]["早餐"],
+    "午餐": menu_data["lunch_menu"]["主食"] + menu_data["lunch_menu"]["主餐"] + menu_data["lunch_menu"]["副餐"],
+    "晚餐": menu_data["dinner_menu"]["主食"] + menu_data["dinner_menu"]["主餐"] + menu_data["dinner_menu"]["副餐"],
 }
+
 
 dish_id_mapping = {dish_id: i for i, dish_id in enumerate(dish_features.keys())}
 mapped_dish_features = {
@@ -97,7 +145,7 @@ mapped_user_order_history = {
 }
 # 將菜品ID重新映射
 meal_classification = classify_dishes_based_on_similarity(similarity_matrix, known_meals)
-def recommend_dishes_for_bmi_and_history(height, weight, age, gender):
+def recommend_dishes_for_bmi_and_history(height, weight, age, gender, user_flavor_preferences):
     bmi = calculate_bmi(height, weight)
     day_recommendations = {}
 
@@ -105,12 +153,18 @@ def recommend_dishes_for_bmi_and_history(height, weight, age, gender):
         meal_dishes = meal_classification[meal_type]  # 使用基於相似度分類的菜品
 
         # 按餐次生成輸入數據
-        top_n = min(len(meal_dishes), 5)
+        top_n = 1 if meal_type == "早餐" else 3
         dish_content_data = np.array([dish_features[dish_id] for dish_id in meal_dishes])
         user_feature_data = np.array([[height, weight, bmi, age, gender]] * len(meal_dishes))
 
         # 預測
         predictions = model.predict([dish_content_data, user_feature_data]).flatten()
+
+        # 根據用戶口味偏好調整預測分數
+        for i, dish_id in enumerate(meal_dishes):
+            flavor_hex = remaining_data[dish_id]["features_hex"]
+            flavor_score = sum(user_flavor_preferences.get(flavor, 0) for flavor in flavor_hex)
+            predictions[i] += flavor_score
 
         # 排序並選出推薦
         top_dishes = np.argsort(predictions)[-top_n:][::-1]
@@ -124,72 +178,110 @@ class Dish:
 @app.route('/recommend', methods=['POST'])
 def recommend():
     data = request.json
+    if not data:
+        return jsonify({"error": "Invalid input data"}), 400
+
     height = data.get("height")
     weight = data.get("weight")
     age = data.get("age")
     gender = data.get("gender")
-
+    flavor_preferences = data.get("flavor_preferences")
+    print(flavor_preferences)
+    user_flavor_preferences = {
+        'spicy': 0,
+        'sweet': 0,
+        'salty': 0,
+        'bitter': 0,
+        'sour': 0,
+        'oily': 0,
+        'light': 0,
+        'crispy': 0,
+        'fragrant': 0,
+        'smoked': 0
+    }
+    if flavor_preferences:
+        for flavor in user_flavor_preferences:
+            if flavor in flavor_preferences:
+                user_flavor_preferences[flavor] += 100
     if not all([height, weight, age, gender]):
         return jsonify({"error": "All inputs (height, weight, age, gender) are required."}), 400
 
     # 獲取推薦菜單
-    recommendations = recommend_dishes_for_bmi_and_history(height, weight, age, gender)
+    print(height, weight, age, gender, user_flavor_preferences)
+    recommendations = recommend_dishes_for_bmi_and_history(height, weight, age, gender, user_flavor_preferences)
 
     # 將推薦菜單的id全部加1
     recommendations = {meal: [dish_id + 1 for dish_id in dish_ids] for meal, dish_ids in recommendations.items()}
 
-    # 查詢資料庫，並將菜品名稱加入結果中
-    result = {}
-    with connection.cursor() as cursor:
-        for meal, dish_ids in recommendations.items():
-            dish_names = []
-            for dish_id in dish_ids:
-                # 查詢資料庫以獲取對應菜品名稱
-                query = "SELECT name FROM dishes WHERE dish_id = %s"
-                cursor.execute(query, (dish_id,))
-                dish = cursor.fetchone()
-                if dish:
-                    dish_names.append(dish[0])
-                else:
-                    dish_names.append(f"Dish with ID {dish_id} not found")
-            result[meal] = dish_names
+    # 連接到資料庫
+    connection = get_db_connection()
+    try:
+        # 查詢資料庫，並將菜品名稱加入結果中
+        result = {}
+        with connection.cursor() as cursor:
+            for meal, dish_ids in recommendations.items():
+                dish_names = []
+                for dish_id in dish_ids:
+                    # 查詢資料庫以獲取對應菜品名稱
+                    query = "SELECT name FROM dishes WHERE dish_id = %s"
+                    cursor.execute(query, (dish_id,))
+                    dish = cursor.fetchone()
+                    if dish:
+                        dish_names.append(dish[0])
+                    else:
+                        dish_names.append(f"Dish with ID {dish_id} not found")
+                result[meal] = dish_names
+    finally:
+        connection.close()
 
     return jsonify(result)
 
 @app.route('/login', methods=['POST'])
 def login():
-    if request.method == 'POST':
+    try:
+        # 連接資料庫
         connection = pymysql.connect(
             host='localhost',
             user='salana',
             password='aas659800123',
             database='test',
-            charset='utf8mb4'
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor  # 使用 DictCursor 返回字典
         )
-
+        
         # 從 JSON 請求體中獲取用戶名和密碼
         data = request.get_json()
+        if not data:
+            return jsonify({"error": "無效的請求數據，請檢查輸入。"}), 400
+
         username = data.get('username')
         password = data.get('password')
+        if not username or not password:
+            return jsonify({"error": "請提供用戶名和密碼。"}), 400
 
-        try:
-            with connection.cursor() as cursor:
-                sql = '''SELECT password FROM users WHERE username = %s'''
-                cursor.execute(sql, (username,))
-                result = cursor.fetchone()
+        with connection.cursor() as cursor:
+            # 查詢資料庫
+            sql = '''SELECT password, user_id FROM users WHERE username = %s'''
+            cursor.execute(sql, (username,))
+            result = cursor.fetchone()
 
-                # 檢查帳號密碼是否匹配
-                if result and result[0] == password:
-                    return jsonify({"message": "登入成功"})
-                else:
-                    return jsonify({"error": "登入失敗，請檢查帳號或密碼。"}), 401
-
-        except pymysql.MySQLError as e:
-            return jsonify({"error": f"資料庫錯誤: {e}"}), 500
-
-        finally:
+            # 檢查帳號密碼是否匹配
+            if result and result['password'] == password:
+                return jsonify({
+                    "message": "登入成功",
+                    "user_id": result['user_id']
+                })
+            else:
+                return jsonify({"error": "登入失敗，請檢查帳號或密碼。"}), 401
+    except pymysql.MySQLError as e:
+        return jsonify({"error": "資料庫操作失敗。", "details": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": "伺服器錯誤，請稍後再試。", "details": str(e)}), 500
+    finally:
+        if 'connection' in locals() and connection.open:
             connection.close()
 
+    # 如果不是 POST 方法
     return jsonify({"error": "請使用 POST 方法進行登入。"}), 405
 @app.route('/register', methods=['POST'])
 def register():

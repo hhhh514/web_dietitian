@@ -3,33 +3,56 @@ import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Concatenate, Input
 from sklearn.metrics.pairwise import cosine_similarity
+import pymysql
+import json
+#calories,protein,carbohydrates,sodium,fiber,fat,vitamins_e,vitamins_c,vitamins_b
+dish_features = {}
+# 建立與 MySQL 資料庫的連線
+connection = pymysql.connect(
+    host='localhost',
+    user='salana',
+    password='aas659800123',
+    database='test',
+    charset='utf8mb4'
+)
 
-# 假設菜品特徵 (每道菜的營養分佈：蛋白質、脂肪、碳水化合物)
-def binary_string_to_numeric(binary_string):
-    return [int(bit) for bit in binary_string]
+try:
+    with connection.cursor() as cursor:
+        # 查詢 dishes 資料表
+        query = """
+        SELECT dish_id, calories, protein, carbohydrates, sodium, fiber, fat, vitamins_e, vitamins_c, vitamins_b
+        FROM dishes
+        """
+        cursor.execute(query)
 
-dish_features = {
-    0: [20, 10, 50, 350, 7.5, 500, 1.2] + binary_string_to_numeric('00110011'),
-    1: [15, 20, 60, 450, 6.0, 400, 1.0] + binary_string_to_numeric('01000100'),
-    2: [10, 5, 80, 300, 8.0, 300, 1.5] + binary_string_to_numeric('10000000'),
-    3: [25, 15, 40, 400, 7.0, 600, 1.3] + binary_string_to_numeric('00010010'),
-    4: [30, 20, 30, 500, 6.5, 700, 1.4] + binary_string_to_numeric('00001000'),
-}
+        # 讀取資料並存入 dish_features
+        dish_features = {}
+        for row in cursor.fetchall():
+            dish_id = row[0]  # id 作為 key
+            features = list(row[1:])  # 其他數據作為 value
+            dish_features[dish_id-1] = features
+
+finally:
+    # 關閉連線
+    connection.close()
+
+# 輸出 dish_features 確認結果
+print(dish_features)
 
 # 重新計算特徵維度
 feature_dim = len(next(iter(dish_features.values())))
 
 user_order_history = {
-    0: {"早餐": [1], "午餐": [3], "晚餐": [0]},
-    1: {"早餐": [1], "午餐": [3], "晚餐": [0]},
-    2: {"早餐": [1], "午餐": [3], "晚餐": [0]},
+    0: {"早餐": [3043, 3088, 3294, 3307, 3138, 2916, 3520, 2960], "午餐":[1920, 2539, 2255, 2513, 2033, 1949,1664, 1517, 1007, 1875, 980, 1305,1, 9, 212, 188], "晚餐": [480, 295, 655, 239, 913, 179, 468, 61, 63,1315, 1514, 1870, 1679, 1086, 1053, 1694, 1469,2849, 2724, 2437, 2511, 1752, 1975, 2904, 1983]},
+    1: {"早餐": [3145, 3024, 3192, 3687, 3266, 3425, 3790, 3323], "午餐": [2824, 2285, 2323, 2135, 2679, 2329,1831, 1065, 1133, 1006, 1135, 1358, 1101,640, 5, 487, 949, 662, 732, 62], "晚餐": [1354, 1005, 1357, 1011, 1617, 1623, 1820,289, 903, 105, 271, 24, 347,1926, 1993, 1995, 2735, 2707, 2103, 2168]},
+    2: {"早餐": [3711, 3644, 3664, 3761, 3023, 3681, 3475, 3181], "午餐": [2080, 2692, 2021, 2282, 1964, 2636, 2578, 1972, 2104, 2108,1089, 1071, 977, 980, 1044, 1014, 1080, 1114,519, 892, 874, 467, 634, 698, 186, 124], "晚餐": [2403, 2217, 2061, 2841,995, 1060, 1068, 1010, 1047, 1117,577, 615, 627, 823, 795, 925]},
 }
 
 # 假設用戶的基本數據 (身高 cm，體重 kg，年齡，性別)
 user_data = {
-    0: {"height": 170, "weight": 65, "age": 25, "gender": 1},
-    1: {"height": 180, "weight": 75, "age": 30, "gender": 1},
-    2: {"height": 160, "weight": 50, "age": 22, "gender": 0},
+    0: {"height": 170, "weight": 50, "age": 22, "gender": 1},
+    1: {"height": 170, "weight": 60, "age": 22, "gender": 1},
+    2: {"height": 170, "weight": 85, "age": 22, "gender": 1},
 }
 
 # 計算 BMI
@@ -87,10 +110,15 @@ def classify_dishes_based_on_similarity(similarity_matrix, known_meals):
     return meal_classification
 
 # 假設已知餐次的菜品
+# 讀取 JSON 文件
+with open('menus.json', 'r', encoding='utf-8') as file:
+    menu_data = json.load(file)
+
+# 將 JSON 數據放入 known_meals
 known_meals = {
-    "早餐": [1],
-    "午餐": [3],
-    "晚餐": [0],
+    "早餐": menu_data["breakfast_menu"]["早餐"],
+    "午餐": menu_data["lunch_menu"]["主食"] + menu_data["lunch_menu"]["主餐"] + menu_data["lunch_menu"]["副餐"],
+    "晚餐": menu_data["dinner_menu"]["主食"] + menu_data["dinner_menu"]["主餐"] + menu_data["dinner_menu"]["副餐"],
 }
 
 meal_classification = classify_dishes_based_on_similarity(similarity_matrix, known_meals)
@@ -116,8 +144,8 @@ user_feature_dim = len(next(iter(user_features.values())))
 dish_content_input = Input(shape=(feature_dim,), name='dish_content_input')
 user_feature_input = Input(shape=(user_feature_dim,), name='user_feature_input')
 
-dish_content_hidden = Dense(8, activation='relu')(dish_content_input)
-user_feature_hidden = Dense(8, activation='relu')(user_feature_input)
+dish_content_hidden = Dense(9, activation='relu')(dish_content_input)
+user_feature_hidden = Dense(9, activation='relu')(user_feature_input)
 
 concat_features = Concatenate()([dish_content_hidden, user_feature_hidden])
 hidden = Dense(64, activation='relu')(concat_features)
@@ -164,7 +192,7 @@ def recommend_dishes_for_bmi_and_history(height, weight, age, gender):
         meal_dishes = meal_classification[meal_type]  # 使用基於相似度分類的菜品
 
         # 按餐次生成輸入數據
-        top_n = min(len(meal_dishes), 5)
+        top_n = 1 if meal_type == "早餐" else 3
         dish_content_data = np.array([dish_features[dish_id] for dish_id in meal_dishes])
         user_feature_data = np.array([[height, weight, bmi, age, gender]] * len(meal_dishes))
 

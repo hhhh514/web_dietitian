@@ -1,48 +1,3 @@
-<script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router'; // 引入 vue-router 用於頁面跳轉
-
-const username = ref('');
-const password = ref('');
-const errorMessage = ref('');
-
-// 獲取路由對象，用於跳轉
-const router = useRouter();
-
-const handleLogin = async () => {
-  errorMessage.value = ''; // 清空舊的錯誤訊息
-  try {
-    // 向後端發送登入請求
-    const response = await fetch('http://localhost:5000/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        username: username.value,
-        password: password.value,
-      }),
-    });
-
-    // 檢查是否成功
-    if (!response.ok) {
-      throw new Error('登入請求失敗');
-    }
-
-    const data = await response.json();
-
-    if (data.message === '登入成功') {
-      console.log('登入成功');
-      // 登入成功後跳轉到主頁面
-      router.push({ name: 'robot' });
-    } else {
-      errorMessage.value = data.error || '未知錯誤';
-    }
-  } catch (error) {
-    errorMessage.value = error.message || '伺服器無法連接，請稍後再試';
-  }
-};
-</script>
 
 <template>
   <div class="login-container">
@@ -83,6 +38,57 @@ const handleLogin = async () => {
   </div>
 </template>
 
+<script setup>
+
+import { ref } from 'vue';
+import { useRouter } from 'vue-router'; // 引入 vue-router 用於頁面跳轉
+
+const username = ref('');
+const password = ref('');
+const errorMessage = ref('');
+
+// 獲取路由對象，用於跳轉
+const router = useRouter();
+
+const handleLogin = async () => {
+  errorMessage.value = ''; // 清空舊的錯誤訊息
+  try {
+    // 向後端發送登入請求
+    const response = await fetch('http://localhost:5000/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: username.value,
+        password: password.value,
+      }),
+    });
+
+    // 檢查是否成功
+    if (!response.ok) {
+      throw new Error('登入請求失敗');
+    }
+
+    const data = await response.json();
+
+    if (data.message === '登入成功') {
+      console.log('登入成功');
+      const userId = data.user_id; // 提取 userid
+      console.log(`User ID: ${userId}`);
+      // 可選：將 userid 存儲到 localStorage 或 Vuex
+      localStorage.setItem('user_id', userId);
+
+      // 登入成功後跳轉到主頁面
+      router.push({ name: 'robot', query: { user_id: userId } });
+    } else {
+      errorMessage.value = data.error || '未知錯誤';
+    }
+  } catch (error) {
+    errorMessage.value = error.message || '伺服器無法連接，請稍後再試';
+  }
+};
+</script>
 <style scoped>
 /* 與原始樣式相同 */
 .login-container {
@@ -155,5 +161,4 @@ button:hover {
 
 .signup-button:hover {
   background-color: #ff4b57;
-}
-</style>
+}</style>
