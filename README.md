@@ -1,29 +1,27 @@
-# newproject
+## Node.js
+### 安裝 Node.js
 
-This template should help get you started developing with Vue 3 in Vite.
+請從 [Node.js 官方網站](https://nodejs.org/) 下載並安裝最新版本的 Node.js。
 
-## Recommended IDE Setup
-
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
-## Project Setup
+### 安裝所需的 Node.js 套件
 
 ```sh
 npm install
 ```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
+### 執行
 
 ```sh
-npm run build
+npm run serve
 ```
+## Python
+### 安裝所需的 Python 套件
+
+```sh
+pip install numpy tensorflow flask flask-cors scikit-learn pymysql
+```
+### 執行 app.py
+
+```sh
+python app.py
+```
+
