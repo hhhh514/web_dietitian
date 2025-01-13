@@ -2,9 +2,12 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Concatenate, Input
+from sklearn.metrics import accuracy_score
 from sklearn.metrics.pairwise import cosine_similarity
 import pymysql
 import json
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 #calories,protein,carbohydrates,sodium,fiber,fat,vitamins_e,vitamins_c,vitamins_b
 dish_features = {}
 # 建立與 MySQL 資料庫的連線
@@ -36,22 +39,23 @@ finally:
     # 關閉連線
     connection.close()
 
-# 輸出 dish_features 確認結果
-print(dish_features)
 
 # 重新計算特徵維度
 feature_dim = len(next(iter(dish_features.values())))
 
 user_order_history = {
+    
     0: {"早餐": [3043, 3088, 3294, 3307, 3138, 2916, 3520, 2960], "午餐":[1920, 2539, 2255, 2513, 2033, 1949,1664, 1517, 1007, 1875, 980, 1305,1, 9, 212, 188], "晚餐": [480, 295, 655, 239, 913, 179, 468, 61, 63,1315, 1514, 1870, 1679, 1086, 1053, 1694, 1469,2849, 2724, 2437, 2511, 1752, 1975, 2904, 1983]},
     1: {"早餐": [3145, 3024, 3192, 3687, 3266, 3425, 3790, 3323], "午餐": [2824, 2285, 2323, 2135, 2679, 2329,1831, 1065, 1133, 1006, 1135, 1358, 1101,640, 5, 487, 949, 662, 732, 62], "晚餐": [1354, 1005, 1357, 1011, 1617, 1623, 1820,289, 903, 105, 271, 24, 347,1926, 1993, 1995, 2735, 2707, 2103, 2168]},
     2: {"早餐": [3711, 3644, 3664, 3761, 3023, 3681, 3475, 3181], "午餐": [2080, 2692, 2021, 2282, 1964, 2636, 2578, 1972, 2104, 2108,1089, 1071, 977, 980, 1044, 1014, 1080, 1114,519, 892, 874, 467, 634, 698, 186, 124], "晚餐": [2403, 2217, 2061, 2841,995, 1060, 1068, 1010, 1047, 1117,577, 615, 627, 823, 795, 925]},
+
+    
 }
 
 # 假設用戶的基本數據 (身高 cm，體重 kg，年齡，性別)
 user_data = {
-    0: {"height": 170, "weight": 50, "age": 22, "gender": 1},
-    1: {"height": 170, "weight": 60, "age": 22, "gender": 1},
+    0: {"height": 170, "weight": 45, "age": 22, "gender": 1},
+    1: {"height": 170, "weight": 60, "age": 22, "gender": 2},
     2: {"height": 170, "weight": 85, "age": 22, "gender": 1},
 }
 
@@ -109,7 +113,7 @@ def classify_dishes_based_on_similarity(similarity_matrix, known_meals):
 
     return meal_classification
 
-# 假設已知餐次的菜品
+
 # 讀取 JSON 文件
 with open('menus.json', 'r', encoding='utf-8') as file:
     menu_data = json.load(file)
@@ -145,7 +149,7 @@ dish_content_input = Input(shape=(feature_dim,), name='dish_content_input')
 user_feature_input = Input(shape=(user_feature_dim,), name='user_feature_input')
 
 dish_content_hidden = Dense(9, activation='relu')(dish_content_input)
-user_feature_hidden = Dense(9, activation='relu')(user_feature_input)
+user_feature_hidden = Dense(5, activation='relu')(user_feature_input)
 
 concat_features = Concatenate()([dish_content_hidden, user_feature_hidden])
 hidden = Dense(64, activation='relu')(concat_features)
@@ -170,20 +174,122 @@ for user_id, meal_history in mapped_user_order_history.items():
             X_user_features.append(user_features[user_id])
             y.append(1 if dish_id in ordered_dishes else 0)
 
+# 將資料分成訓練集和測試集
 X_dish_content = np.array(X_dish_content)
 X_user_features = np.array(X_user_features)
 y = np.array(y)
 
-# 訓練模型
-model.fit(
-    [X_dish_content, X_user_features], 
+X_dish_content_train, X_dish_content_test, X_user_features_train, X_user_features_test, y_train, y_test = train_test_split(
+    X_dish_content, 
+    X_user_features, 
     y, 
-    batch_size=8, 
-    epochs=10, 
-    verbose=1
+    test_size=0.2, 
+    random_state=42
 )
 
-# 推薦函數
+# 訓練模型
+history = model.fit(
+    [X_dish_content_train, X_user_features_train],
+    y_train,
+    batch_size=3,
+    epochs=10,
+    verbose=1,
+    validation_data=([X_dish_content_test, X_user_features_test], y_test)
+)
+
+# 隨機選取樣本
+sample_indices = np.random.choice(len(X_dish_content_test), size=len(X_dish_content_test), replace=False)
+sample_dish_content = X_dish_content_test[sample_indices]
+sample_user_features = X_user_features_test[sample_indices]
+sample_labels = y_test[sample_indices]
+print(sample_labels)
+# 將 sample_labels 存入 TXT 文件
+with open('sample_labels.txt', 'w') as f:
+    for label in sample_labels:
+        f.write(f"{label}\n")
+# 預測
+sample_predictions = model.predict([sample_dish_content, sample_user_features])
+# 將 sample_predictions 存入 TXT 文件
+with open('sample_predictions.txt', 'w') as f:
+    for prediction in sample_predictions:
+        f.write(f"{prediction[0]}\n")
+# 計算每個樣本的 Loss 和誤差
+loss_function = tf.keras.losses.BinaryCrossentropy()
+sample_losses = []
+sample_accuracies = []
+
+for i in range(len(sample_indices)):
+    # 計算每個樣本的 Loss
+    loss = loss_function(sample_labels[i:i+1], sample_predictions[i:i+1]).numpy()
+    sample_losses.append(loss)
+    
+    # 計算每個樣本的準確率
+    accuracy = 1 - loss
+    sample_accuracies.append(accuracy)
+
+# 準備繪圖數據
+samples = np.arange(1, len(sample_indices) + 1)
+
+# 畫折線圖
+plt.figure(figsize=(12, 6))
+
+# Loss 折線圖
+plt.subplot(1, 2, 1)
+plt.plot(samples, sample_losses, label='Loss', color='red')
+plt.title('Loss over Samples')
+plt.xlabel('Sample Index')
+plt.ylabel('Loss')
+plt.legend()
+
+# Accuracy 折線圖
+plt.subplot(1, 2, 2)
+plt.plot(samples, sample_accuracies, label='Accuracy', color='blue')
+plt.title('Accuracy over Samples')
+plt.xlabel('Sample Index')
+plt.ylabel('Accuracy')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+# 繪製訓練與驗證的損失與準確率
+plt.figure(figsize=(12, 8))
+
+# 訓練的損失圖
+plt.subplot(2, 2, 1)
+plt.plot(history.history['loss'], label='Training Loss')
+plt.title('Training Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+
+# 訓練的準確率圖
+plt.subplot(2, 2, 2)
+plt.plot(history.history['accuracy'], label='Training Accuracy')
+plt.title('Training Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+
+# 驗證的損失圖
+plt.subplot(2, 2, 3)
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.title('Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+
+# 驗證的準確率圖
+plt.subplot(2, 2, 4)
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.title('Validation Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
 def recommend_dishes_for_bmi_and_history(height, weight, age, gender):
     bmi = calculate_bmi(height, weight)
     day_recommendations = {}
@@ -208,7 +314,7 @@ def recommend_dishes_for_bmi_and_history(height, weight, age, gender):
 # 測試
 height = 170
 weight = 65
-age = 25
+age = 22
 gender = 1
 recommendations = recommend_dishes_for_bmi_and_history(height, weight, age, gender)
 print("每日餐次推薦菜品：", recommendations)

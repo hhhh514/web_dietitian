@@ -24,6 +24,7 @@ CORS(app, resources={r"/recommend": {"origins": "http://localhost:5173"}}, suppo
 CORS(app, resources={r"/login": {"origins": "http://localhost:5173"}}, supports_credentials=True)
 CORS(app, resources={r"/register": {"origins": "http://localhost:5173"}}, supports_credentials=True)
 CORS(app, resources={r"/recipe": {"origins": "http://localhost:5173"}}, supports_credentials=True)
+CORS(app, resources={r"/ingredients": {"origins": "http://localhost:5173"}}, supports_credentials=True)
 # 菜品口味
 def to_flavor_list(sweet, spicy, salty, oily, sour, bitter, light, crispy, fragrant, smoked):
     # 定義對應的風味標識符
@@ -77,9 +78,11 @@ finally:
 # 更新菜品特徵
 
 user_order_history = {
+    
     0: {"早餐": [3043, 3088, 3294, 3307, 3138, 2916, 3520, 2960], "午餐":[1920, 2539, 2255, 2513, 2033, 1949,1664, 1517, 1007, 1875, 980, 1305,1, 9, 212, 188], "晚餐": [480, 295, 655, 239, 913, 179, 468, 61, 63,1315, 1514, 1870, 1679, 1086, 1053, 1694, 1469,2849, 2724, 2437, 2511, 1752, 1975, 2904, 1983]},
     1: {"早餐": [3145, 3024, 3192, 3687, 3266, 3425, 3790, 3323], "午餐": [2824, 2285, 2323, 2135, 2679, 2329,1831, 1065, 1133, 1006, 1135, 1358, 1101,640, 5, 487, 949, 662, 732, 62], "晚餐": [1354, 1005, 1357, 1011, 1617, 1623, 1820,289, 903, 105, 271, 24, 347,1926, 1993, 1995, 2735, 2707, 2103, 2168]},
     2: {"早餐": [3711, 3644, 3664, 3761, 3023, 3681, 3475, 3181], "午餐": [2080, 2692, 2021, 2282, 1964, 2636, 2578, 1972, 2104, 2108,1089, 1071, 977, 980, 1044, 1014, 1080, 1114,519, 892, 874, 467, 634, 698, 186, 124], "晚餐": [2403, 2217, 2061, 2841,995, 1060, 1068, 1010, 1047, 1117,577, 615, 627, 823, 795, 925]},
+    
 }
 # 假設用戶的基本數據 (身高 cm，體重 kg，年齡，性別)
 
@@ -153,13 +156,20 @@ def recommend_dishes_for_bmi_and_history(height, weight, age, gender, user_flavo
         meal_dishes = meal_classification[meal_type]  # 使用基於相似度分類的菜品
 
         # 按餐次生成輸入數據
-        top_n = 1 if meal_type == "早餐" else 3
+        if meal_type == "早餐":
+            top_n = 1
+        else:
+            main_dishes = [dish_id for dish_id in meal_dishes if remaining_data[dish_id]["food_category"] in ["主餐", "主食"]]
+            side_dishes = [dish_id for dish_id in meal_dishes if remaining_data[dish_id]["food_category"] == "副餐"]
+            top_n_main = 1
+            top_n_side = 2
         dish_content_data = np.array([dish_features[dish_id] for dish_id in meal_dishes])
         user_feature_data = np.array([[height, weight, bmi, age, gender]] * len(meal_dishes))
 
         # 預測
         predictions = model.predict([dish_content_data, user_feature_data]).flatten()
-
+        # 儲存predictions
+        np.save(f'predictions_{meal_type}.npy', predictions)
         # 根據用戶口味偏好調整預測分數
         for i, dish_id in enumerate(meal_dishes):
             flavor_hex = remaining_data[dish_id]["features_hex"]
@@ -167,14 +177,24 @@ def recommend_dishes_for_bmi_and_history(height, weight, age, gender, user_flavo
             predictions[i] += flavor_score
 
         # 排序並選出推薦
-        top_dishes = np.argsort(predictions)[-top_n:][::-1]
-        day_recommendations[meal_type] = [meal_dishes[i] for i in top_dishes]
+        if meal_type == "早餐":
+            top_dishes = np.argsort(predictions)[-top_n:][::-1]
+            day_recommendations[meal_type] = [meal_dishes[i] for i in top_dishes]
+        else:
+            main_predictions = [predictions[meal_dishes.index(dish_id)] for dish_id in main_dishes]
+            side_predictions = [predictions[meal_dishes.index(dish_id)] for dish_id in side_dishes]
+           
+            top_main_dishes = np.argsort(main_predictions)[-top_n_main:][::-1]
+            top_side_dishes = np.argsort(side_predictions)[-top_n_side:][::-1]
+
+            day_recommendations[meal_type] = [main_dishes[i] for i in top_main_dishes] + [side_dishes[i] for i in top_side_dishes]
 
     return day_recommendations
 class Dish:
     def __init__(self, dish_id, name):
         self.dish_id = dish_id
         self.name = name
+
 @app.route('/recommend', methods=['POST'])
 def recommend():
     data = request.json
@@ -326,14 +346,7 @@ def register():
         }
 
         # 連接資料庫
-        connection = pymysql.connect(
-            host='localhost',
-            user='salana',
-            password='aas659800123',
-            database='test',
-            charset='utf8mb4'
-        )
-
+        connection = get_db_connection()
         try:
             with connection.cursor() as cursor:
                 # 插入資料的 SQL 語句
@@ -357,6 +370,38 @@ def register():
             connection.close()
 
     return jsonify({"state": "failed", "error": "請使用 POST 方法進行註冊。"}), 405
+@app.route('/ingredients', methods=['POST'])
+def get_ingredients():
+    # 從前端接收菜名
+    data = request.get_json()
+    dish_name = data.get('dish')
+    
+    if not dish_name:
+        return jsonify({"error": "菜名必須提供"}), 400
+
+    # 連接到資料庫
+    connection = get_db_connection()
+
+    try:
+        with connection.cursor() as cursor:
+            # 查詢菜品的食材
+            sql = "SELECT ingredients FROM dishes WHERE name = %s"
+            cursor.execute(sql, (dish_name,))
+            result = cursor.fetchone()
+            print(result)
+            if result:  
+                # 如果找到了對應的菜品食材
+                ingredients_list = result[0].split("\n")  
+                return jsonify({"ingredients": ingredients_list})
+            else:
+                # 如果沒找到對應的菜品
+                return jsonify({"error": "找不到對應的菜品食材"}), 404
+
+    except Exception as e:
+        return jsonify({"error": f"發生錯誤: {str(e)}"}), 500
+
+    finally:
+        connection.close()
 @app.route('/recipe', methods=['POST'])
 def get_recipe():
     # 從前端接收菜名
@@ -367,15 +412,7 @@ def get_recipe():
         return jsonify({"error": "菜名必須提供"}), 400
 
     # 連接到資料庫
-    connection = pymysql.connect(
-            host='localhost',
-            user='salana',
-            password='aas659800123',
-            database='test',
-            charset='utf8mb4'
-        )
-
-
+    connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
             # 查詢菜品的做法

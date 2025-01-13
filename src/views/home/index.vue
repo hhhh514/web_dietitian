@@ -33,6 +33,9 @@ onMounted(() => {
       <button @click="$router.push({ name: 'login' })" class="hero-button">立即開始諮詢</button>
     </div>
   </main>
+  <div class="runner">
+    <img src="@/assets/images/animated-cat-image-0072.gif" alt="Running Character" class="runner-image" />
+  </div>
 </template>
 
 <style scoped>
@@ -46,8 +49,7 @@ onMounted(() => {
   background-color: #2b2b2b;
   color: #fff;
   overflow: hidden;
-  transform: translateX(-30px)
-  
+  transform: translateX(-30px);
 }
 
 /* 內容區塊 */
@@ -89,3 +91,46 @@ onMounted(() => {
   transform: scale(1.1);
 }
 </style>
+
+
+<style scoped>
+
+/* 跑步的小人容器 */
+.runner {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+  animation: moveRunner 10s linear infinite; /* Increased duration from 5s to 10s */
+}
+
+/* 跑步的小人圖片 */
+.runner-image {
+  width: 100%;
+  height: 100%;
+  animation: run 1s steps(8) infinite;
+}
+
+/* 跑步動畫 */
+@keyframes run {
+  from {
+    background-position: 0;
+  }
+  to {
+    background-position: -800px; /* 假設每幀圖片寬度為100px，共8幀 */
+  }
+}
+
+/* 小人從左到右移動動畫 */
+@keyframes moveRunner {
+  from {
+    left: 0;
+  }
+  to {
+    left: 100vw;
+  }
+}
+</style>
+

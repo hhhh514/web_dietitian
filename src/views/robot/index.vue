@@ -11,9 +11,10 @@
       </div>
       <div class="history-section">
         <ul class="history-list">
-          <li v-for="(item, index) in history" :key="index" :class="{ active: selectedHistory === index }"
+           <li id="list" v-for="(item, index) in history" :key="index" :class="{ active: selectedHistory === index }"
             @click="loadHistory(item, index)">
             {{ item }}
+              <button id="list_button" @click="deleteHistory(index)" ></button>
           </li>
         </ul>
       </div>
@@ -23,7 +24,8 @@
       <div class="chat-box">
         <div v-for="(message, index) in messages" :key="index" :class="message.type">
           <span class="username">{{ message.type === 'bot' ? 'AI Dietitian' : 'You' }}:</span>
-          <p>{{ message.text }}</p>
+          <p v-if="message.type === 'bot'" v-html="formatMessage(message.text)"></p>
+          <p v-else>{{ message.text }}</p>
         </div>
         <div v-if="isLoading" class="loading">
           <p>Loading...</p>
@@ -31,7 +33,7 @@
       </div>
       <div class="input-area">
         <input v-model="userInput" @keyup.enter="sendMessage" placeholder="Type your question here..." />
-        <button @click="sendMessage">Send</button>
+        <button @click="sendMessage" id="send"></button>
       </div>
       <div v-if="recommendations.length > 0">
         <h3>Today's Meal Recommendations:</h3>
@@ -53,7 +55,7 @@ export default {
       searchQuery: '', // 搜尋輸入框的內容
       userInput: '', // 用戶輸入的問題
       messages: [
-        { text: "Hello! How can I assist you today?", type: "bot" }
+        { text: "Hello! 為了幫你推薦最適合的餐點，可以稍微了解一下你的身材數據 ?", type: "bot" }
       ],
       history: JSON.parse(localStorage.getItem(`user_${this.userId}_history`)) || [],
       selectedHistory: null,
@@ -70,8 +72,12 @@ export default {
     };
   },
   methods: {
+     formatMessage(message) {
+      // 將 \n 換成 <br>
+      return message.replace(/\n/g, "<br>");
+    },
     startNewChat() {
-      this.messages = [{ text: "Hello! How can I assist you today?", type: "bot" }];
+      this.messages = [{ text: "Hello!!! >,<", type: "bot" }];
       this.userInput = '';
       this.errorMessage = '';
       this.selectedHistory = null;
@@ -113,10 +119,53 @@ export default {
         this.errorMessage = "未找到匹配的聊天歷史";
       }
     },
+    deleteHistory(index) {
+      const userKey = `user_${this.userId}_history`;
+      const chatName = this.history[index];
+      this.history.splice(index, 1);
+      localStorage.setItem(userKey, JSON.stringify(this.history));
+      localStorage.removeItem(`chat_${chatName}`);
+      if (this.selectedHistory === index) {
+      this.startNewChat();
+    }},
     sendMessage() {
-
+      
       this.errorMessage = null;
       const userInput = this.userInput.trim();
+      const ingredientQueryMatch = userInput.match(/(\S+)的食材/); // 檢查是否為查詢食材
+      if (ingredientQueryMatch) {
+        const dishName = ingredientQueryMatch[1]; // 取得餐點名稱
+        // 發送查詢食材的請求
+        this.isLoading = true;
+        fetch('http://localhost:5000/ingredients', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ dish: dishName })
+        })
+          .then(response => response.json())
+          .then(data => {
+            this.isLoading = false; // 隱藏加載中
+            if (data.error) {
+              this.errorMessage = data.error;
+              this.messages.push({ text: this.errorMessage, type: "bot" });
+            } else {
+              const ingredientsMessage = `餐點「${dishName}」的食材：<br>${data.ingredients.join(", ")}`;
+              this.messages.push({ text: ingredientsMessage, type: "bot" });
+            }
+          })
+          .catch(() => {
+            this.isLoading = false;
+            this.errorMessage = 'Failed to fetch ingredients';
+            this.messages.push({ text: this.errorMessage, type: "bot" });
+          });
+
+        this.messages.push({ text: userInput, type: "user" });
+        this.userInput = ''; // 清空輸入框
+
+        return; // 如果是查詢食材的話，直接返回，不處理其他信息
+      }
       if (!userInput) return;
       if (userInput.toLowerCase().includes('幫我儲存')) {
         this.userProvidedDate = userInput.substring(4).trim(); 
@@ -129,7 +178,7 @@ export default {
       const ageMatch = userInput.match(/年齡(\d+)/);
       const genderMatch = userInput.match(/性別(男|女)/);
       const flavorMatch = userInput.match(/口味(\S+)/); // 解析口味
-      const recipeQueryMatch = userInput.match(/(\S+)的做法/); // 檢查是否為查詢餐點做法
+      const recipeQueryMatch = userInput.match(/(\S+)的(做法|作法)/); // 檢查是否為查詢餐點做法
       if(flavorMatch){
         const flavorMap = {
           '鹹': 'salty',
@@ -171,7 +220,7 @@ export default {
               this.errorMessage = data.error;
               this.messages.push({ text: this.errorMessage, type: "bot" });
             } else {
-              const recipeMessage = `餐點「${dishName}」的做法：\n${data.recipe}`;
+              const recipeMessage = `餐點「${dishName}」的做法：<br>${data.recipe}`;
               this.messages.push({ text: recipeMessage, type: "bot" });
             }
           })
@@ -201,12 +250,13 @@ export default {
       }
 
       if (genderMatch) {
-        this.gender = genderMatch[1] === "男" ? 1 : 0; // "男" 對應 1，"女" 對應 0
+        this.gender = genderMatch[1] === "女" ? 2 : 1; // "男" 對應 1，"女" 對應 0
+
       }
 
       // 驗證所有必要參數是否存在
       if (!this.height || !this.weight || !this.age || this.gender === null) {
-        this.errorMessage = "請提供有效的資料EX身高170體重65年齡30性別男口味鹹";
+        this.errorMessage = "請提供有效的資料EX身高170體重65年齡22性別男口味鹹 (╯°□°）╯︵ ┻━┻ ";
         this.messages.push({ text: this.errorMessage, type: "bot" });
         this.userInput = ''; // 清空輸入框
         return;
@@ -232,29 +282,25 @@ export default {
       })
         .then(response => response.json())
         .then(data => {
-          this.isLoading = false; // 隱藏加載中
-          if (data.error) {
+            this.isLoading = false; // 隱藏加載中
+            if (data.error) {
             this.errorMessage = data.error;
             this.messages.push({ text: this.errorMessage, type: "bot" });
-          } else {
+            } else {
             // 先對餐點類型進行排序：早餐、午餐、晚餐
             const mealOrder = ['早餐', '午餐', '晚餐'];
-            let recommendationsMessage = "Today's Meal Recommendations: ";
+            let recommendationsMessage = "Today's Meal Recommendations:\n";  // 使用 <br> 進行換行
 
             mealOrder.forEach(mealType => {
               if (data[mealType]) {
-                const mealList = data[mealType].join(", ");
-                recommendationsMessage += `${mealType}: ${mealList} | `;
+              const mealList = data[mealType].join(", ");
+              recommendationsMessage += `${mealType}: ${mealList}\n`;  // 每一項餐點建議後加上換行
               }
             });
 
-            // 移除最後的 " | "
-            recommendationsMessage = recommendationsMessage.slice(0, -2);
             // 把餐點建議加到訊息中
-
             this.messages.push({ text: recommendationsMessage, type: "bot" });
-
-          }
+            }
         })
         .catch(error => {
           this.isLoading = false;
@@ -279,9 +325,7 @@ export default {
     this.startNewChat();
   }
 };
-
 </script>
-
 
 <style scoped>
 .app-container {
@@ -293,10 +337,12 @@ export default {
   overflow: hidden;
   padding-left: 320px;
   box-sizing: border-box;
+  font-size: 1.5em; /* 字體放大1.5倍 */
 }
 
 .sidebar {
-  width: 240px;
+  width: 15vw;
+  height: 100vh;
   background-color: #1c1c1c;
   padding: 10px;
   display: flex;
@@ -310,13 +356,14 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
+
   justify-content: space-between;
   padding: 20px;
   background-color: #2b2b2b;
 }
 
 .sidebar h2 {
-  font-size: 1.2em;
+  font-size: 1em;
   margin-bottom: 20px;
 }
 
@@ -326,9 +373,30 @@ export default {
   padding: 0;
   width: 100%;
   list-style: none;
-  /* 移除預設樣式 */
+}
+#list{
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  width: 14vw;
+}
+#list_button {
+  background: url('/src/assets/images/cross.png') no-repeat center center;
+  background-size: contain;
+  width: 24px;
+  height: 24px;
+  border: none;
+  cursor: pointer;
+  background-color: transparent;
+  margin-left: auto;
+  position: absolute;
+  right: 10px;
+  display: none; 
 }
 
+#list:hover #list_button {
+  display: block; /* 滑鼠移到 list 時顯示 */
+}
 .history-list li {
   width: 100%;
   padding: 10px;
@@ -368,7 +436,6 @@ export default {
   margin: 5px 0;
   border-radius: 5px;
 }
-
 .bot {
   text-align: left;
   background-color: #4d4d4d;
@@ -382,7 +449,17 @@ export default {
   display: flex;
   gap: 10px;
 }
+#send {
+  background: url('/src/assets/images/paper-plane.png') no-repeat center center;
+  background-size: contain;
+  width: 24px;
+  height: 24px;
+  border: none;
+  cursor: pointer;
+  background-color: transparent;
+  margin-top: 5px;
 
+}
 input {
   flex: 1;
   padding: 10px;
@@ -449,10 +526,8 @@ button:hover {
 
 .search-container {
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 1px;
   flex-grow: 1;
-  /* 搜尋框占滿剩餘空間 */
-
 }
 
 .search-container input {
@@ -466,11 +541,12 @@ button:hover {
   color: #fff;
 }
 
-.history-section h3 {
+.history-section{
+  display: flex;
   margin-top: 20px;
   color: #aaa;
+  flex-direction: row;
 }
-
 .search-and-new-chat {
   display: flex;
   align-items: center;
